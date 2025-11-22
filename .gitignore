@@ -1,0 +1,45 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Analysis outputs
+captures/
+outputs/
+*.pcap
+*.pcapng
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+
+# macOS application bundles
+Frameworks/
+MacOS/
+Resources/
+*.app/
+CodeResources
+Info.plist
+PkgInfo
+_CodeSignature/
