@@ -209,8 +209,16 @@ Scan networks or serial buses to discover connected hardware devices.
 ### 3. Protocol Debugging
 Monitor and debug communication issues between software and hardware.
 
-### 4. Protocol Documentation
+### 4. Documentation Gathering
+Automatically collect and organize hardware documentation for reference.
+
+### 5. Protocol Documentation
 Capture traffic to document undocumented or proprietary protocols.
+
+## Additional Resources
+
+- **[USAGE.md](USAGE.md)** - Comprehensive guide for the documentation agent
+- **[hardware_docs/](hardware_docs/)** - Hardware documentation folder
 
 ## Notes
 
