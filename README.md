@@ -16,6 +16,7 @@ This project provides tools to analyze and understand various hardware communica
 - 🌐 Network packet capture and analysis
 - 📊 Protocol traffic monitoring
 - 🔍 Device scanning and discovery
+- 📚 Comprehensive hardware documentation (see [Hardware_Documents](Hardware_Documents/))
 
 ## Installation
 
@@ -39,6 +40,11 @@ mioXLcracker/
 │   ├── serial_analyzer.py  # Serial communication analyzer
 │   ├── modbus_analyzer.py  # Modbus protocol analyzer
 │   └── network_analyzer.py # Network traffic analyzer
+├── Hardware_Documents/     # Hardware documentation
+│   ├── README.md          # Documentation index
+│   ├── mio_xl_overview.md # mio XL hardware overview
+│   ├── protocol_specifications.md # Protocol details
+│   └── connection_guide.md # Connection instructions
 ├── protocol_analyzer.py    # Main entry point with examples
 ├── requirements.txt        # Python dependencies
 ├── .gitignore             # Git ignore rules
