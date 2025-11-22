@@ -16,6 +16,7 @@ import sys
 import logging
 import argparse
 import json
+import re
 from pathlib import Path
 from typing import List, Dict, Optional
 from urllib.parse import urljoin, urlparse
@@ -74,7 +75,7 @@ class DocumentationAgent:
         
         self.session = requests.Session()
         self.session.headers.update({
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
         })
         
         self.found_docs = []
@@ -262,10 +263,14 @@ class DocumentationAgent:
             filename = self._get_filename(url, title, response)
             filepath = self.output_dir / filename
             
-            # Don't re-download if file already exists
+            # Don't re-download if file already exists and is non-empty
             if filepath.exists():
-                logger.info(f"File already exists: {filename}")
-                return filepath
+                if filepath.stat().st_size > 0:
+                    logger.info(f"File already exists: {filename}")
+                    return filepath
+                else:
+                    logger.warning(f"Existing file is empty, re-downloading: {filename}")
+                    filepath.unlink()
             
             # Download file
             with open(filepath, 'wb') as f:
@@ -280,6 +285,39 @@ class DocumentationAgent:
             logger.error(f"Error downloading {url}: {e}")
             return None
     
+    def _sanitize_filename(self, filename: str) -> str:
+        """
+        Sanitize filename to prevent path traversal and other security issues.
+        
+        Args:
+            filename: Original filename
+            
+        Returns:
+            Sanitized filename
+        """
+        # Remove path separators and dangerous patterns
+        filename = os.path.basename(filename)  # Remove any path components
+        filename = filename.replace('..', '')   # Remove parent directory references
+        filename = filename.replace('/', '_')   # Replace path separators
+        filename = filename.replace('\\', '_')  # Replace Windows path separators
+        filename = filename.replace('\0', '')   # Remove null bytes
+        
+        # Only keep safe characters
+        safe_filename = "".join(c for c in filename if c.isalnum() or c in (' ', '-', '_', '.'))
+        safe_filename = safe_filename.strip()
+        
+        # Ensure filename is not empty and not too long
+        if not safe_filename or safe_filename == '.':
+            safe_filename = "download"
+        
+        # Limit length while preserving extension
+        if len(safe_filename) > 200:
+            name_part = safe_filename[:150]
+            ext_part = safe_filename[-50:] if '.' in safe_filename[-50:] else ''
+            safe_filename = name_part + ext_part
+        
+        return safe_filename
+    
     def _get_filename(self, url: str, title: str, response: requests.Response) -> str:
         """
         Determine appropriate filename for downloaded file.
@@ -290,21 +328,20 @@ class DocumentationAgent:
             response: HTTP response object
             
         Returns:
-            Filename to use
+            Sanitized filename to use
         """
         # Try to get filename from Content-Disposition header
         if 'Content-Disposition' in response.headers:
-            import re
             content_disp = response.headers['Content-Disposition']
             filename_match = re.search(r'filename="?([^"]+)"?', content_disp)
             if filename_match:
-                return filename_match.group(1)
+                return self._sanitize_filename(filename_match.group(1))
         
         # Try to get filename from URL
         parsed_url = urlparse(url)
         url_filename = os.path.basename(parsed_url.path)
         if url_filename and '.' in url_filename:
-            return url_filename
+            return self._sanitize_filename(url_filename)
         
         # Generate filename from title
         safe_title = "".join(c for c in title if c.isalnum() or c in (' ', '-', '_'))
@@ -314,7 +351,7 @@ class DocumentationAgent:
         content_type = response.headers.get('Content-Type', '')
         extension = self._guess_extension(content_type)
         
-        return f"{safe_title}{extension}"
+        return self._sanitize_filename(f"{safe_title}{extension}")
     
     def _guess_extension(self, content_type: str) -> str:
         """
