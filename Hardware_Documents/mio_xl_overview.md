@@ -55,7 +55,7 @@
 ## System Requirements
 
 ### Operating Systems
-- Windows 7 or later
+- Windows 10 or later (Windows 7/8 may work but are no longer supported)
 - macOS 10.7 or later
 - Linux (class-compliant support)
 

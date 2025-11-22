@@ -138,9 +138,10 @@ import usb.core
 import usb.util
 
 # Find the mio XL device
-# Replace vendor_id and product_id with actual values
-vendor_id = 0x2321  # Example - check with lsusb
-product_id = 0x????  # Example - check with lsusb
+# NOTE: Replace these with actual values found using lsusb or system device manager
+# iConnectivity vendor ID is 0x2321, product ID varies by model
+vendor_id = 0x2321  # iConnectivity vendor ID
+product_id = 0x0040  # Example product ID - verify with lsusb for your device
 
 dev = usb.core.find(idVendor=vendor_id, idProduct=product_id)
 
@@ -165,7 +166,7 @@ else:
 
 #### On Linux (using usbmon):
 ```bash
-# Load usbmon module
+# Load usbmon module (legacy method, but still widely supported)
 sudo modprobe usbmon
 
 # Find bus number
@@ -174,9 +175,11 @@ lsusb | grep -i midi
 # Capture traffic (replace X with bus number)
 sudo cat /sys/kernel/debug/usb/usbmon/Xu
 
-# Or use Wireshark
+# Or use Wireshark with usbmon (recommended)
 sudo wireshark
 # Select usbmonX interface
+
+# Note: Modern systems may also support newer USB capture methods via debugfs
 ```
 
 #### On Windows (using USBPcap):
@@ -213,6 +216,7 @@ with mido.open_input(port_name) as inport:
 sudo usermod -a -G dialout $USER
 
 # For USB raw access, create udev rule
+# NOTE: Replace vendor ID (2321) with your device's actual vendor ID if different
 echo 'SUBSYSTEM=="usb", ATTRS{idVendor}=="2321", MODE="0666"' | \
   sudo tee /etc/udev/rules.d/50-mio-xl.rules
 
