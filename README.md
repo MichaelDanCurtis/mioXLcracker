@@ -16,6 +16,7 @@ This project provides tools to analyze and understand various hardware communica
 - 🌐 Network packet capture and analysis
 - 📊 Protocol traffic monitoring
 - 🔍 Device scanning and discovery
+- 📚 Automated hardware documentation gathering
 
 ## Installation
 
@@ -39,7 +40,11 @@ mioXLcracker/
 │   ├── serial_analyzer.py  # Serial communication analyzer
 │   ├── modbus_analyzer.py  # Modbus protocol analyzer
 │   └── network_analyzer.py # Network traffic analyzer
+├── hardware_docs/          # Hardware documentation folder
+│   ├── README.md          # Documentation folder guide
+│   └── INDEX.md           # Documentation index
 ├── protocol_analyzer.py    # Main entry point with examples
+├── doc_agent.py           # Documentation gathering agent
 ├── requirements.txt        # Python dependencies
 ├── .gitignore             # Git ignore rules
 └── README.md              # This file
@@ -148,12 +153,50 @@ print(f"Endpoints: {stats['endpoints']}")
 analyzer.save_capture('capture.pcap')
 ```
 
+### Hardware Documentation Agent
+
+The documentation agent automatically searches for and downloads hardware documentation for the mio XL MIDI interface.
+
+```bash
+# Search for and download all documentation
+python doc_agent.py
+
+# Search only (no downloads)
+python doc_agent.py --search
+
+# Download previously found documentation
+python doc_agent.py --download
+
+# Create/update documentation index
+python doc_agent.py --create-index
+
+# Specify custom output directory
+python doc_agent.py --output-dir my_docs
+
+# Enable verbose logging
+python doc_agent.py --verbose
+```
+
+The agent will:
+- Search known documentation sources for hardware manuals, datasheets, and guides
+- Classify documents by type (manual, specification, datasheet, SDK, protocol, etc.)
+- Download documents to the `hardware_docs/` folder
+- Create an organized index of all documentation
+- Generate metadata for easy reference
+
+All discovered documentation is stored in the `hardware_docs/` folder with:
+- `README.md` - Guide to the documentation folder
+- `INDEX.md` - Organized list of all documentation
+- `documentation_index.json` - Detailed metadata in JSON format
+
 ## Dependencies
 
 - **pymodbus** (>=3.1.0) - Modbus protocol implementation
 - **pyserial** (>=3.5) - Serial port communication
 - **scapy** (>=2.5.0) - Network packet manipulation and analysis
 - **pyyaml** (>=6.0) - YAML configuration support
+- **requests** (>=2.31.0) - HTTP library for documentation downloads
+- **beautifulsoup4** (>=4.12.0) - HTML parsing for documentation discovery
 
 ## Common Use Cases
 

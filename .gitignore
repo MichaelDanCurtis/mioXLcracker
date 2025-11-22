@@ -43,3 +43,10 @@ CodeResources
 Info.plist
 PkgInfo
 _CodeSignature/
+
+# Downloaded documentation (keep structure but not large files)
+hardware_docs/*.pdf
+hardware_docs/*.doc
+hardware_docs/*.docx
+hardware_docs/*.zip
+hardware_docs/documentation_index.json
