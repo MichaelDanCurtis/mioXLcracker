@@ -82,34 +82,35 @@ class NetworkAnalyzer:
             logger.warning("No packets to analyze")
             return {}
         
-        stats = {
-            'total_packets': len(self.packets),
-            'protocols': {},
-            'endpoints': set(),
-            'ports': set()
-        }
+        # Use defaultdict for efficient counting
+        from collections import defaultdict
+        protocol_counts = defaultdict(int)
+        endpoints = set()
+        ports = set()
         
         for pkt in self.packets:
             # Protocol distribution
             if IP in pkt:
-                proto = 'IP'
                 if TCP in pkt:
-                    proto = 'TCP'
-                    stats['ports'].add(pkt[TCP].sport)
-                    stats['ports'].add(pkt[TCP].dport)
+                    protocol_counts['TCP'] += 1
+                    ports.add(pkt[TCP].sport)
+                    ports.add(pkt[TCP].dport)
                 elif UDP in pkt:
-                    proto = 'UDP'
-                    stats['ports'].add(pkt[UDP].sport)
-                    stats['ports'].add(pkt[UDP].dport)
+                    protocol_counts['UDP'] += 1
+                    ports.add(pkt[UDP].sport)
+                    ports.add(pkt[UDP].dport)
+                else:
+                    protocol_counts['IP'] += 1
                 
-                stats['protocols'][proto] = stats['protocols'].get(proto, 0) + 1
-                stats['endpoints'].add(pkt[IP].src)
-                stats['endpoints'].add(pkt[IP].dst)
+                endpoints.add(pkt[IP].src)
+                endpoints.add(pkt[IP].dst)
         
-        stats['endpoints'] = list(stats['endpoints'])
-        stats['ports'] = sorted(list(stats['ports']))
-        
-        return stats
+        return {
+            'total_packets': len(self.packets),
+            'protocols': dict(protocol_counts),
+            'endpoints': list(endpoints),
+            'ports': sorted(ports)
+        }
     
     def filter_modbus_tcp(self) -> List:
         """
@@ -118,10 +119,10 @@ class NetworkAnalyzer:
         Returns:
             List of Modbus TCP packets
         """
-        modbus_packets = []
-        for pkt in self.packets:
-            if TCP in pkt and (pkt[TCP].sport == 502 or pkt[TCP].dport == 502):
-                modbus_packets.append(pkt)
+        modbus_packets = [
+            pkt for pkt in self.packets
+            if TCP in pkt and (pkt[TCP].sport == 502 or pkt[TCP].dport == 502)
+        ]
         
         logger.info(f"Found {len(modbus_packets)} Modbus TCP packets")
         return modbus_packets

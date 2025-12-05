@@ -154,13 +154,16 @@ class ModbusAnalyzer:
             logger.error(f"Exception writing register: {e}")
             return False
     
-    async def scan_devices(self, start_id: int = 1, end_id: int = 247) -> List[int]:
+    async def scan_devices(self, start_id: int = 1, end_id: int = 247, 
+                           concurrency: int = 10, timeout: float = 0.5) -> List[int]:
         """
-        Scan for responding Modbus devices.
+        Scan for responding Modbus devices using concurrent requests.
         
         Args:
             start_id: Starting device ID
             end_id: Ending device ID
+            concurrency: Maximum concurrent scan requests
+            timeout: Timeout per device probe in seconds
             
         Returns:
             List of responding device IDs
@@ -169,19 +172,41 @@ class ModbusAnalyzer:
             logger.error("Not connected to Modbus")
             return []
         
-        logger.info(f"Scanning for Modbus devices {start_id}-{end_id}...")
+        logger.info(f"Scanning for Modbus devices {start_id}-{end_id} (concurrency={concurrency})...")
         responding_devices = []
         
-        for device_id in range(start_id, end_id + 1):
+        async def probe_device(device_id: int) -> Optional[int]:
+            """Probe a single device and return its ID if it responds."""
             try:
-                result = await self.client.read_holding_registers(0, 1, device_id=device_id)
+                result = await asyncio.wait_for(
+                    self.client.read_holding_registers(0, 1, device_id=device_id),
+                    timeout=timeout
+                )
                 if not result.isError():
-                    responding_devices.append(device_id)
                     logger.info(f"Found device at ID {device_id}")
-            except:
+                    return device_id
+            except asyncio.TimeoutError:
+                pass  # Device didn't respond in time
+            except Exception:
                 pass  # Device didn't respond
-            
-            await asyncio.sleep(0.1)  # Small delay between requests
+            return None
+        
+        # Use semaphore to limit concurrent requests
+        semaphore = asyncio.Semaphore(concurrency)
+        
+        async def limited_probe(device_id: int) -> Optional[int]:
+            async with semaphore:
+                return await probe_device(device_id)
+        
+        # Create all probe tasks
+        tasks = [limited_probe(device_id) for device_id in range(start_id, end_id + 1)]
+        
+        # Execute all probes concurrently with limited parallelism
+        results = await asyncio.gather(*tasks)
+        
+        # Filter out None results (non-responding devices)
+        responding_devices = [device_id for device_id in results if device_id is not None]
+        responding_devices.sort()  # Return in ascending order
         
         logger.info(f"Scan complete. Found {len(responding_devices)} devices.")
         return responding_devices
