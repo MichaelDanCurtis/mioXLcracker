@@ -109,12 +109,13 @@ class SerialAnalyzer:
             logger.error(f"Error writing to serial port: {e}")
             return 0
     
-    def capture(self, duration: float = 10.0) -> List[Dict]:
+    def capture(self, duration: float = 10.0, poll_interval: float = 0.01) -> List[Dict]:
         """
         Capture serial traffic.
         
         Args:
             duration: Capture duration in seconds
+            poll_interval: Time between polls in seconds (default 10ms)
             
         Returns:
             List of captured frames with timestamp and data
@@ -136,6 +137,9 @@ class SerialAnalyzer:
                     'hex': data.hex(),
                     'length': len(data)
                 })
+            else:
+                # Avoid busy-waiting when no data is available
+                time.sleep(poll_interval)
         
         logger.info(f"Captured {len(frames)} frames")
         return frames
