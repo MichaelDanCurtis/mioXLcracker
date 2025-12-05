@@ -4,6 +4,7 @@ Analyzes network-based hardware communication protocols
 """
 
 import logging
+from collections import defaultdict
 from typing import Dict, List, Optional
 from scapy.all import sniff, wrpcap, IP, TCP, UDP
 
@@ -83,7 +84,6 @@ class NetworkAnalyzer:
             return {}
         
         # Use defaultdict for efficient counting
-        from collections import defaultdict
         protocol_counts = defaultdict(int)
         endpoints = set()
         ports = set()

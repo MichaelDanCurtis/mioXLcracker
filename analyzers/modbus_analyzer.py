@@ -187,8 +187,10 @@ class ModbusAnalyzer:
                     return device_id
             except asyncio.TimeoutError:
                 pass  # Device didn't respond in time
-            except Exception:
-                pass  # Device didn't respond
+            except (ConnectionError, OSError) as e:
+                logger.debug(f"Connection error probing device {device_id}: {e}")
+            except Exception as e:
+                logger.debug(f"Unexpected error probing device {device_id}: {e}")
             return None
         
         # Use semaphore to limit concurrent requests
